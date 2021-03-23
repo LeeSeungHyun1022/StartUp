@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     public GameObject otherPlayerPrefab;
 
     GameObject player;
-    public GameObject other = null;
+    public GameObject other;
 
     public Transform playerCreatePos;
     public Transform otherPos;
@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public Client client;
 
     bool isConnect;
+    bool isOtherCreate;
     // Start is called before the first frame update
     void Start()
     {
@@ -43,6 +44,7 @@ public class GameManager : MonoBehaviour
     IEnumerator Connect()
     {
         for (; ; )
+
         {
             if (client.clientName != "-1")
             {
@@ -56,6 +58,7 @@ public class GameManager : MonoBehaviour
             for (int i = 0; int.Parse(client.clientName) > i; i++)
             {
                 other = Instantiate(otherPlayerPrefab, otherPos.position, Quaternion.identity);
+                isOtherCreate = true;
             }
 
             player = Instantiate(playerPrefab, playerCreatePos.position, Quaternion.identity);
@@ -76,10 +79,41 @@ public class GameManager : MonoBehaviour
             client.Send($"%Position;{client.clientName};{player.transform.position.x};{player.transform.position.y};{player.transform.position.z};" +
                 $"{player.transform.eulerAngles.x};{player.transform.eulerAngles.y};{player.transform.eulerAngles.z}");
         }
+
+        if (client.isCreate)
+        {
+            client.isCreate = false;
+            other = Instantiate(otherPlayerPrefab, otherPos.position, Quaternion.identity);
+            StartCoroutine(Creating());
+        }
+
+        if (isOtherCreate)
+        {
+            other.transform.position = client.pos;
+            other.transform.eulerAngles = client.rot;
+        }
     }
 
-    public void CreateOther()
+    IEnumerator Creating()
     {
-        other = Instantiate(otherPlayerPrefab, otherPos.position, Quaternion.identity);
+        for(; ; )
+        {
+            if (other != null)
+            {
+                isOtherCreate = true;
+                break;
+            }
+            yield return new WaitForSeconds(0.1f);
+        }
+        
+    }
+
+    public void OtherMove(float Px, float Py, float Pz, float Rx, float Ry, float Rz)
+    {
+        if (other == null)
+        {
+            other.transform.position = new Vector3(Px, Py, Pz);
+            other.transform.eulerAngles = new Vector3(Rx, Ry, Rz);
+        }
     }
 }

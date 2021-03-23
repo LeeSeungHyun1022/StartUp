@@ -17,8 +17,10 @@ public class Client : MonoBehaviour
 	StreamWriter writer;
 	StreamReader reader;
 
-	bool isCreate;
+	public bool isCreate;
 
+	public Vector3 pos;
+	public Vector3 rot;
 	public void ConnectToServer()
 	{
 		// 이미 연결되었다면 함수 무시
@@ -65,12 +67,16 @@ public class Client : MonoBehaviour
 				//if (isCreate)
 				{
 					string[] temp = data.Split(';');
-					Debug.Log("다른 물체가 움직이고 있습니다");
+					Debug.Log($"다른 물체가 움직이고 있습니다 x={temp[2]} y={temp[3]} z={temp[4]}");
+
+					pos = new Vector3(float.Parse(temp[2]), float.Parse(temp[3]), float.Parse(temp[4]));
+					rot = new Vector3(float.Parse(temp[5]), float.Parse(temp[6]), float.Parse(temp[7]));
+
 					//manager.other.transform.position = new Vector3(float.Parse(temp[2]), float.Parse(temp[3]), float.Parse(temp[4]));
 					//manager.other.transform.eulerAngles = new Vector3(float.Parse(temp[5]), float.Parse(temp[6]), float.Parse(temp[7]));
-					//이부분이 문제인데 받아온 값을 나누고 그 값을 vectoer로 만들어야하는데
-					
-					Debug.Log(temp[2] +" "+ temp[3] + " " + temp[4] + " " + temp[5] + " " + temp[6] + " " + temp[7]  );
+					//이부분이 문제인데 받아온 값을 나누고 그 값을 vectoer로 만들어야하는
+
+					//Debug.Log(temp[2] +" "+ temp[3] + " " + temp[4] + " " + temp[5] + " " + temp[6] + " " + temp[7]  );
 					//Debug.Log(manager.other.transform.position);
 					return;
 				}
@@ -81,26 +87,13 @@ public class Client : MonoBehaviour
         {
 			if(clientName != data.Split(';')[1])
             {
-				StopCoroutine(Creating());
-				StartCoroutine(Creating());
-				return;
+				isCreate = true;
 			}
         }
 		//Debug.Log(data);
 		
 	}
 
-	IEnumerator Creating()
-    {
-		manager.CreateOther();
-        while (true)
-        {
-			yield return new WaitForSeconds(0.1f);
-			if (manager.other != null)
-				break;
-		}
-		isCreate = true;
-    }
 
 	public void Send(string data)
 	{
