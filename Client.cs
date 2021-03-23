@@ -67,7 +67,7 @@ public class Client : MonoBehaviour
 				//if (isCreate)
 				{
 					string[] temp = data.Split(';');
-					Debug.Log($"다른 물체가 움직이고 있습니다 x={temp[2]} y={temp[3]} z={temp[4]}");
+					//Debug.Log($"다른 물체가 움직이고 있습니다 x={temp[2]} y={temp[3]} z={temp[4]}");
 
 					pos = new Vector3(float.Parse(temp[2]), float.Parse(temp[3]), float.Parse(temp[4]));
 					rot = new Vector3(float.Parse(temp[5]), float.Parse(temp[6]), float.Parse(temp[7]));

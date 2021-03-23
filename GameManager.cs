@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
     {
         //Debug.Log(TCP.ip +" "+ TCP.port);
 
+        Screen.SetResolution(800, 600, false, 60);
+
         if (TCP.isHost)
         {
             //Debug.Log("서버 생성");
@@ -59,6 +61,7 @@ public class GameManager : MonoBehaviour
             {
                 other = Instantiate(otherPlayerPrefab, otherPos.position, Quaternion.identity);
                 isOtherCreate = true;
+                StartCoroutine(Creating());
             }
 
             player = Instantiate(playerPrefab, playerCreatePos.position, Quaternion.identity);
@@ -72,9 +75,11 @@ public class GameManager : MonoBehaviour
     //나머지는 다른 플레이어를 움직이도록 설정
 
     // Update is called once per frame
+    bool frame;
+
     void Update()
     {
-        if (isConnect)
+        if (isConnect && frame)
         {
             client.Send($"%Position;{client.clientName};{player.transform.position.x};{player.transform.position.y};{player.transform.position.z};" +
                 $"{player.transform.eulerAngles.x};{player.transform.eulerAngles.y};{player.transform.eulerAngles.z}");
@@ -87,11 +92,12 @@ public class GameManager : MonoBehaviour
             StartCoroutine(Creating());
         }
 
-        if (isOtherCreate)
+        if (isOtherCreate && frame)
         {
             other.transform.position = client.pos;
             other.transform.eulerAngles = client.rot;
         }
+        frame = !frame;
     }
 
     IEnumerator Creating()
@@ -106,14 +112,5 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
         
-    }
-
-    public void OtherMove(float Px, float Py, float Pz, float Rx, float Ry, float Rz)
-    {
-        if (other == null)
-        {
-            other.transform.position = new Vector3(Px, Py, Pz);
-            other.transform.eulerAngles = new Vector3(Rx, Ry, Rz);
-        }
     }
 }

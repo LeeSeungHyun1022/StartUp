@@ -64,7 +64,7 @@ public class Server : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < disconnectList.Count - 1; i++)
+        for (int i = 0; i < disconnectList.Count; i++)
         {
             Broadcast($"{disconnectList[i].clientName} 연결이 끊어졌습니다", clients);
 
