@@ -14,9 +14,11 @@ public class PlayerMove : MonoBehaviour
     Camera camera;
     Rigidbody rigid;
 
+    SphereCollider spCol;
+
     Vector3 moveVec;
 
-    float hAxis;
+    //float hAxis;
     float vAxis;
     float yRota;
     float xRota;
@@ -25,12 +27,15 @@ public class PlayerMove : MonoBehaviour
 
     bool isJump1;   //점프 후 
     bool isJump2;   //다이빙
+    bool isGround;  //땅에 붙어잇는지 확인
 
     void Start()
     {
         rigid = gameObject.GetComponent<Rigidbody>();
 
         camera = gameObject.GetComponentInChildren<Camera>();
+
+        spCol = gameObject.GetComponent<SphereCollider>();
     }
 
 
@@ -44,9 +49,10 @@ public class PlayerMove : MonoBehaviour
         CharacterRotation();
     }
 
+
     void GetInput()
     {
-        hAxis = Input.GetAxisRaw("Horizontal");
+        //hAxis = Input.GetAxisRaw("Horizontal");
         vAxis = Input.GetAxisRaw("Vertical");
         xRota = Input.GetAxisRaw("Mouse Y"); //위 아래는 x축 회전
         yRota = Input.GetAxisRaw("Mouse X"); //좌 우는 y축 회전
@@ -55,12 +61,12 @@ public class PlayerMove : MonoBehaviour
 
     void Move()
     {
-        if (!isJump1)
+        if (!isJump1 && isGround)
         {
-            Vector3 moveH = transform.right * hAxis;
+            //Vector3 moveH = transform.right * hAxis;
             Vector3 moveV = transform.forward * vAxis;
 
-            Vector3 velocity = (moveH + moveV).normalized * speed;
+            Vector3 velocity = /*(moveH +*/ moveV.normalized * speed;
 
             rigid.MovePosition(transform.position + velocity * Time.deltaTime);
         }
@@ -84,14 +90,14 @@ public class PlayerMove : MonoBehaviour
 
     void jump()
     {
-        if (jDown && isJump1 && !isJump2)
+        if (jDown && isJump1 && !isJump2 && isGround)
         {
             rigid.AddForce(transform.forward * 3, ForceMode.Impulse);
             isJump2 = true;
             //다이빙 애니메이션
         }
 
-        if (jDown && !isJump1)
+        if (jDown && !isJump1 && !isGround)
         {
             rigid.AddForce(Vector3.up * 10, ForceMode.Impulse);
             rigid.AddForce(transform.forward * 2, ForceMode.Impulse);
@@ -107,6 +113,22 @@ public class PlayerMove : MonoBehaviour
             isJump1 = false;
             isJump2 = false;
             //착지 애니메이션
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.tag.Equals("Floor") || other.tag.Equals("Other"))
+        {
+            isGround = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag.Equals("Floor") || other.tag.Equals("Other"))
+        {
+            isGround = false;
         }
     }
 }

@@ -66,11 +66,17 @@ public class Server : MonoBehaviour
 
         for (int i = 0; i < disconnectList.Count; i++)
         {
-            Broadcast($"{disconnectList[i].clientName} 연결이 끊어졌습니다", clients);
-
+            Broadcast($"%Disconnect:{disconnectList[i].clientName} 연결이 끊어졌습니다", clients);
+            Debug.Log($"%Disconnect:{disconnectList[i].clientName} 연결이 끊어졌습니다");
             clients.Remove(disconnectList[i]);
             disconnectList.RemoveAt(i);
+            if (clients.Count == 0)
+            {
+                Debug.Log("서버다운");
+                server.Stop();
+            }
         }
+        
     }
 
 
@@ -150,7 +156,14 @@ public class Server : MonoBehaviour
             }
         }
     }
+
+    void OnApplicationQuit()
+    {
+        Broadcast($"%Close", clients);
+        server.Stop();
+    }
 }
+
 
 
 public class ServerClient

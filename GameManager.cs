@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,20 +11,26 @@ public class GameManager : MonoBehaviour
     GameObject player;
     public GameObject other;
 
-    public Transform playerCreatePos;
-    public Transform otherPos;
+    public Transform player1CreatePos;
+    public Transform player2CreatePos;
 
     public Server server;
     public Client client;
 
     bool isConnect;
     bool isOtherCreate;
+
+
     // Start is called before the first frame update
     void Start()
     {
         //Debug.Log(TCP.ip +" "+ TCP.port);
 
+
         Screen.SetResolution(800, 600, false, 60);
+
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 40;
 
         if (TCP.isHost)
         {
@@ -42,6 +49,7 @@ public class GameManager : MonoBehaviour
         //연결 됐으면
         //플레이어 생성
         
+        
     }
     IEnumerator Connect()
     {
@@ -57,14 +65,20 @@ public class GameManager : MonoBehaviour
         }
         if (isConnect)
         {
-            for (int i = 0; int.Parse(client.clientName) > i; i++)
+            if (client.clientName.Equals("0"))
             {
-                other = Instantiate(otherPlayerPrefab, otherPos.position, Quaternion.identity);
+                player = Instantiate(playerPrefab, player1CreatePos.position, Quaternion.identity);
+            }
+
+            if (client.clientName.Equals("1")) {
+                player = Instantiate(playerPrefab, player2CreatePos.position, Quaternion.identity);
+                other = Instantiate(otherPlayerPrefab, player1CreatePos.position, Quaternion.identity);
                 isOtherCreate = true;
                 StartCoroutine(Creating());
             }
 
-            player = Instantiate(playerPrefab, playerCreatePos.position, Quaternion.identity);
+            
+            
         }
         else
         {
@@ -88,8 +102,15 @@ public class GameManager : MonoBehaviour
         if (client.isCreate)
         {
             client.isCreate = false;
-            other = Instantiate(otherPlayerPrefab, otherPos.position, Quaternion.identity);
+            other = Instantiate(otherPlayerPrefab, player2CreatePos.position, Quaternion.identity);
             StartCoroutine(Creating());
+        }
+
+        if (client.isDelete)
+        {
+            client.isDelete = false;
+            isOtherCreate = false;
+            Destroy(other); 
         }
 
         if (isOtherCreate && frame)
@@ -98,7 +119,22 @@ public class GameManager : MonoBehaviour
             other.transform.eulerAngles = client.rot;
         }
         frame = !frame;
-    }
+
+        if (Input.GetKey("escape"))
+        {
+            client.CloseSocket();
+        }
+
+        if (Input.GetKey("f5"))
+        {
+            //StartCoroutine(Respawn());
+        }
+
+        if (!client.socketReady)
+        {
+            SceneManager.LoadScene("Create");
+        }
+    }   
 
     IEnumerator Creating()
     {
@@ -111,6 +147,12 @@ public class GameManager : MonoBehaviour
             }
             yield return new WaitForSeconds(0.1f);
         }
-        
+        StartCoroutine(Spawn());
+    }
+
+    IEnumerator Spawn()
+    {
+        yield return new WaitForSeconds(0.3f);
+        other.GetComponent<BoxCollider>().enabled = true;
     }
 }

@@ -4,20 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Client : MonoBehaviour
 {
-	GameManager manager;
-
 	public string clientName;
 
-	bool socketReady;
+	public bool socketReady;
 	TcpClient socket;
 	NetworkStream stream;
 	StreamWriter writer;
 	StreamReader reader;
 
 	public bool isCreate;
+	public bool isDelete;
 
 	public Vector3 pos;
 	public Vector3 rot;
@@ -90,6 +90,24 @@ public class Client : MonoBehaviour
 				isCreate = true;
 			}
         }
+
+		if (data.Contains("%Disconnect"))
+        {
+            if (clientName.Equals("0"))
+            {
+				isDelete = true;
+            }
+        }
+
+        if (data.Contains("%Close"))
+        {
+			if (!clientName.Equals("0"))
+			{
+				Debug.Log("호스트가 나갔습니다");
+				SceneManager.LoadScene("Create");
+			}
+
+		}
 		//Debug.Log(data);
 		
 	}
@@ -122,7 +140,7 @@ public class Client : MonoBehaviour
 		CloseSocket();
 	}
 
-	void CloseSocket()
+	public void CloseSocket()
 	{
 		if (!socketReady) return;
 
