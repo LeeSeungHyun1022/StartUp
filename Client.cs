@@ -108,6 +108,18 @@ public class Client : MonoBehaviour
 			}
 
 		}
+
+        if (data.Contains("%Goal"))
+        {
+			if (data.Split(';')[1].Equals(clientName))
+			{
+				Debug.Log("win");
+			}
+            else
+            {
+				Debug.Log("lose");
+            }
+		}
 		//Debug.Log(data);
 		
 	}

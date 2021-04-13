@@ -137,6 +137,11 @@ public class Server : MonoBehaviour
             return;
         }
 
+        if (data.Contains("%Goal"))
+        {
+            Broadcast($"%Goal;" + data.Split(';')[1], clients);
+        }
+
         Broadcast($"{c.clientName}:{data}", clients);
     }
     // "

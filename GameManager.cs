@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
         Screen.SetResolution(800, 600, false, 60);
 
         QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = 40;
+        Application.targetFrameRate = 30;
 
         if (TCP.isHost)
         {
@@ -68,9 +68,8 @@ public class GameManager : MonoBehaviour
             if (client.clientName.Equals("0"))
             {
                 player = Instantiate(playerPrefab, player1CreatePos.position, Quaternion.identity);
-            }
-
-            if (client.clientName.Equals("1")) {
+            }else
+            {
                 player = Instantiate(playerPrefab, player2CreatePos.position, Quaternion.identity);
                 other = Instantiate(otherPlayerPrefab, player1CreatePos.position, Quaternion.identity);
                 isOtherCreate = true;
@@ -124,17 +123,26 @@ public class GameManager : MonoBehaviour
         {
             client.CloseSocket();
         }
-
+        
         if (Input.GetKey("f5"))
         {
-            //StartCoroutine(Respawn());
+            Respawn();
         }
+        
 
         if (!client.socketReady)
         {
             SceneManager.LoadScene("Create");
         }
     }   
+
+    public void Respawn()
+    {
+        player.transform.position = player1CreatePos.position;
+        player.transform.rotation = Quaternion.identity;
+        player.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        player.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+    }
 
     IEnumerator Creating()
     {

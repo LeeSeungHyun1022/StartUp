@@ -6,6 +6,8 @@ public class PlayerMove : MonoBehaviour
 {
 
     public float speed;
+    public float jumpPower;
+    public float jumpFoward;
     public float lookSensitivity;
 
     public float cameraRotationLimit;
@@ -90,17 +92,18 @@ public class PlayerMove : MonoBehaviour
 
     void jump()
     {
-        if (jDown && isJump1 && !isJump2 && isGround)
+        if (jDown && isJump1 && !isJump2 && !isGround)
         {
-            rigid.AddForce(transform.forward * 3, ForceMode.Impulse);
+            rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
             isJump2 = true;
             //다이빙 애니메이션
         }
 
-        if (jDown && !isJump1 && !isGround)
+        if (jDown && !isJump1 && isGround)
         {
-            rigid.AddForce(Vector3.up * 10, ForceMode.Impulse);
-            rigid.AddForce(transform.forward * 2, ForceMode.Impulse);
+            Debug.Log("점프눌림");
+            rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
+            rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
             isJump1 = true;
             //점프 애니메이션
         }
@@ -120,6 +123,14 @@ public class PlayerMove : MonoBehaviour
     {
         if(other.tag.Equals("Floor") || other.tag.Equals("Other"))
         {
+            isGround = true;
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.tag.Equals("Floor") || other.tag.Equals("Other"))
+        {  
             isGround = true;
         }
     }
