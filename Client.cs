@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 
 public class Client : MonoBehaviour
 {
+	public GameManager manager;
+
 	public string clientName;
 
 	public bool socketReady;
@@ -21,6 +23,9 @@ public class Client : MonoBehaviour
 
 	public Vector3 pos;
 	public Vector3 rot;
+
+	List<Vector3> birgdes = new List<Vector3>();
+
 	public void ConnectToServer()
 	{
 		// 이미 연결되었다면 함수 무시
@@ -55,11 +60,12 @@ public class Client : MonoBehaviour
 	{
 		if (data.Contains("%NAME"))
 		{
-			clientName = data.Split('l')[1];
-			//Debug.Log(data.Split('l')[1]);
-			Send("%NAMEl"+clientName);
+			clientName = data.Split(';')[1];
+			Debug.Log(data.Split(';')[1]);
+			Send("%NAME;"+clientName);
 			return;
 		} 
+
         if (data.Contains("%Position"))
         {
 			if(clientName != data.Split(';')[1])
@@ -85,6 +91,7 @@ public class Client : MonoBehaviour
 		
         if (data.Contains("%Create"))
         {
+			//Debug.Log(data.Split(';')[1]);
 			if(clientName != data.Split(';')[1])
             {
 				isCreate = true;
@@ -120,8 +127,61 @@ public class Client : MonoBehaviour
 				Debug.Log("lose");
             }
 		}
-		//Debug.Log(data);
-		
+        //Debug.Log(data);
+
+        if (data.Contains("%Floor"))
+        {
+			string[] a = data.Split(';');
+
+			int[,] floors = floors = new int[10, 5] {
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+								{0,0,0,0,0 },
+			}; 
+
+			int cnti = 0; //2차원 배열 만들기 위해 사용
+			int cntj = 0;
+			
+			for(int i=1; i < a.Length; i++)
+            {
+				floors[cnti, cntj] = int.Parse(a[i]);
+
+				cntj++;
+
+				if (i % 5 == 0)
+				{
+					cnti++;
+					cntj = 0;
+				}
+            }
+
+			manager.CreateFallingFloor(floors);
+        }
+
+        if (data.Contains("%Brigde"))
+        {
+			string[] a = data.Split(';');
+			birgdes.Add(new Vector3(float.Parse(a[1]), float.Parse(a[2]), float.Parse(a[3])));
+			if (birgdes.Count == 3)
+			{
+				manager.CreateSpineBrigde(birgdes);
+			}
+		}
+
+        if (data.Contains("%Spin"))
+        {
+			string[] a = data.Split(';');
+			//Debug.Log($"{int.Parse(a[1])}{bool.Parse(a[2])}");
+			manager.SpinDir(int.Parse(a[1]),bool.Parse(a[2]));
+			
+        }
 	}
 
 

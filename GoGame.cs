@@ -23,5 +23,6 @@ public class GoGame : MonoBehaviour
         TCP.ip = IpInput.text == "" ? "127.0.0.1" : IpInput.text;
         TCP.port = PortInput.text == "" ? 7777 : int.Parse(PortInput.text);
         SceneManager.LoadScene("InGame");
+        TCP.isHost = false;
     }
 }

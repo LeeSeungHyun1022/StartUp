@@ -9,9 +9,10 @@ using System.IO;
 
 public class Server : MonoBehaviour
 {
-
     List<ServerClient> clients;
     List<ServerClient> disconnectList;
+
+    public ServerObstacle obstacle;
 
     TcpListener server;
     bool serverStarted;
@@ -22,7 +23,6 @@ public class Server : MonoBehaviour
     {
         clients = new List<ServerClient>();
         disconnectList = new List<ServerClient>();
-
         try
         {
             server = new TcpListener(IPAddress.Any, TCP.port);
@@ -70,6 +70,7 @@ public class Server : MonoBehaviour
             Debug.Log($"%Disconnect:{disconnectList[i].clientName} 연결이 끊어졌습니다");
             clients.Remove(disconnectList[i]);
             disconnectList.RemoveAt(i);
+            cntClinet--;
             if (clients.Count == 0)
             {
                 Debug.Log("서버다운");
@@ -112,8 +113,9 @@ public class Server : MonoBehaviour
         clients.Add(new ServerClient(listener.EndAcceptTcpClient(ar)));
         StartListening();
 
+        Debug.Log(cntClinet);
         // 메시지를 연결된 모두에게 보냄
-        Broadcast("%NAMEl"+(cntClinet++).ToString(), new List<ServerClient>() { clients[clients.Count - 1] });
+        Broadcast("%NAME;"+(cntClinet++).ToString(), new List<ServerClient>() { clients[clients.Count - 1] });
     }
 
 
@@ -121,8 +123,8 @@ public class Server : MonoBehaviour
     {
         if (data.Contains("%NAME"))
         {
-            //Debug.Log(data);
-            c.clientName = data.Split('l')[1];
+            Debug.Log(data);
+            c.clientName = data.Split(';')[1];
             Broadcast($"%Create;{c.clientName}", clients);
             return;
         }
@@ -140,6 +142,24 @@ public class Server : MonoBehaviour
         if (data.Contains("%Goal"))
         {
             Broadcast($"%Goal;" + data.Split(';')[1], clients);
+            return;
+        }
+
+        if (data.Contains("%Floor"))
+        {
+            Broadcast($"%Floor{obstacle.GetFloor()}", clients); //보내고\
+            return;
+        }
+
+        if (data.Contains("%Brigde"))
+        {
+            List<Vector3> a = obstacle.GetBrigdeRot();
+            foreach (Vector3 b in a)
+            {
+                Debug.Log(b);
+                Broadcast($"%Brigde;{b.x};{b.y};{b.z}", clients); //보내고
+            }
+            return;
         }
 
         Broadcast($"{c.clientName}:{data}", clients);
@@ -162,9 +182,19 @@ public class Server : MonoBehaviour
         }
     }
 
+    public void SpinB(List<int> ids, bool dir)
+    {
+        foreach (int id in ids)
+        {
+            //Debug.Log($"%Spin;{id};{dir}");
+            Broadcast($"%Spin;{id};{dir}", clients);
+        }
+    }
+
     void OnApplicationQuit()
     {
-        Broadcast($"%Close", clients);
+        
+        Broadcast($"%Close", clients); 
         server.Stop();
     }
 }

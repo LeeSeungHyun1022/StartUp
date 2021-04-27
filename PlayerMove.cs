@@ -101,7 +101,7 @@ public class PlayerMove : MonoBehaviour
 
         if (jDown && !isJump1 && isGround)
         {
-            Debug.Log("점프눌림");
+            //Debug.Log("점프눌림");
             rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
             rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
             isJump1 = true;

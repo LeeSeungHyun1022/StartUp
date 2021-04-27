@@ -38,7 +38,6 @@ public class FallingFloor : MonoBehaviour
 
         floors[x, y] = 1;
 
-        Debug.Log(x + " " + y);
 
         for (; ; )
         {

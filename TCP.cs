@@ -6,5 +6,5 @@ public static class TCP
 {
     public static int port;
     public static string ip;
-    public static bool isHost;
+    public static bool isHost = false;
 }

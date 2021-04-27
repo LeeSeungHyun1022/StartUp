@@ -14,12 +14,22 @@ public class GameManager : MonoBehaviour
     public Transform player1CreatePos;
     public Transform player2CreatePos;
 
+    public GameObject trueFloor;
+    public GameObject falseFloor;
+    public Transform[] floorsPos;
+
+
+    public Transform[] brigdesRot;
+    public SpinBrigde[] brigdes;
+
     public Server server;
     public Client client;
 
+    public ServerObstacle obstacle;
+
     bool isConnect;
     bool isOtherCreate;
-
+    bool isCreateDone;
 
     // Start is called before the first frame update
     void Start()
@@ -34,23 +44,52 @@ public class GameManager : MonoBehaviour
 
         if (TCP.isHost)
         {
-            //Debug.Log("서버 생성");
+            Debug.Log("서버 생성");
             server.ServerCreate();
+            obstacle.ServerStart();
             client.ConnectToServer();
+            StartCoroutine(Connect());
         }
         else
         {
-            //Debug.Log("서버 참여");
+            Debug.Log("서버 참여");
             client.ConnectToServer();
+            StartCoroutine(CreateMap());
         }
-
-        StartCoroutine(Connect());
-
-        //연결 됐으면
-        //플레이어 생성
-        
-        
     }
+
+    IEnumerator CreateMap()
+    {
+        for(; ; )
+        {
+            if (client.clientName != null)
+                break;
+            yield return new WaitForSeconds(0.1f);
+        }
+        Debug.Log("로딩끝");
+        client.Send("%Floor");
+        for(; ; )
+        {
+            if (isCreateDone)
+            {
+                isCreateDone = false;
+                break;
+            }
+            yield return new WaitForSeconds(0.1f);
+        }
+        client.Send("%Brigde");
+        for (; ; )
+        {
+            if (isCreateDone)
+            {
+                isCreateDone = false;
+                break;
+            }
+            yield return new WaitForSeconds(0.1f);
+        }
+        StartCoroutine(Connect());
+    }
+
     IEnumerator Connect()
     {
         for (; ; )
@@ -155,6 +194,7 @@ public class GameManager : MonoBehaviour
             }
             yield return new WaitForSeconds(0.1f);
         }
+        isCreateDone = true;
         StartCoroutine(Spawn());
     }
 
@@ -162,5 +202,44 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.3f);
         other.GetComponent<BoxCollider>().enabled = true;
+    }
+
+    public void CreateFallingFloor(int[,] floors)
+    {
+        int cnt = 0;
+
+        foreach (int floor in floors)
+        {
+            if (floor == 0)
+            {
+                Instantiate(falseFloor, floorsPos[cnt].position, floorsPos[cnt].rotation);
+            }
+
+            if (floor == 1)
+            {
+                Instantiate(trueFloor, floorsPos[cnt].position, floorsPos[cnt].rotation);
+            }
+
+            cnt++;
+        }
+
+        isCreateDone = true;
+    }
+
+
+
+    public void CreateSpineBrigde(List<Vector3> brigdes)
+    {
+        for(int i=0; i<3; i++)
+        {
+            brigdesRot[i].eulerAngles = brigdes[i];
+        }
+
+        isCreateDone = true;
+    }
+
+    public void SpinDir(int id, bool dir)
+    {
+        brigdes[id].dir = dir;
     }
 }
