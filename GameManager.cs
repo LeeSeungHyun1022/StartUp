@@ -2,17 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
-{
+{ 
     public GameObject playerPrefab;
     public GameObject otherPlayerPrefab;
 
     GameObject player;
     public GameObject other;
 
+    public Transform player1LobbyPos;
+    public Transform player2LobbyPos;
     public Transform player1CreatePos;
     public Transform player2CreatePos;
+
+    public StageMove[] player1Stage;
+    public StageMove[] player2Stage;
 
     public GameObject trueFloor;
     public GameObject falseFloor;
@@ -27,9 +33,13 @@ public class GameManager : MonoBehaviour
 
     public ServerObstacle obstacle;
 
+    public Text countDownTxt;
+
     bool isConnect;
     bool isOtherCreate;
-    bool isCreateDone;
+    public bool isCreateDone;
+
+    Dictionary<int, FalseFloorEvent> dicFalse;
 
     // Start is called before the first frame update
     void Start()
@@ -40,35 +50,32 @@ public class GameManager : MonoBehaviour
         Screen.SetResolution(800, 600, false, 60);
 
         QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = 30;
+        Application.targetFrameRate = 60;
 
         if (TCP.isHost)
         {
-            Debug.Log("서버 생성");
             server.ServerCreate();
             obstacle.ServerStart();
-            client.ConnectToServer();
-            StartCoroutine(Connect());
         }
-        else
-        {
-            Debug.Log("서버 참여");
-            client.ConnectToServer();
-            StartCoroutine(CreateMap());
-        }
+        client.ConnectToServer();
+        StartCoroutine(CreateMap());
     }
+
 
     IEnumerator CreateMap()
     {
-        for(; ; )
+        for (; ; )              //서버에서 create를 받아오면
         {
-            if (client.clientName != null)
+            if (isCreateDone || TCP.isHost)
+            {
+                isCreateDone = false;
                 break;
+            }
             yield return new WaitForSeconds(0.1f);
         }
-        Debug.Log("로딩끝");
+        //Debug.Log("로딩끝");
         client.Send("%Floor");
-        for(; ; )
+        for (; ; )
         {
             if (isCreateDone)
             {
@@ -106,17 +113,15 @@ public class GameManager : MonoBehaviour
         {
             if (client.clientName.Equals("0"))
             {
-                player = Instantiate(playerPrefab, player1CreatePos.position, Quaternion.identity);
-            }else
+                player = Instantiate(playerPrefab, player1LobbyPos.position, Quaternion.identity);
+            } else
             {
-                player = Instantiate(playerPrefab, player2CreatePos.position, Quaternion.identity);
-                other = Instantiate(otherPlayerPrefab, player1CreatePos.position, Quaternion.identity);
+                player = Instantiate(playerPrefab, player2LobbyPos.position, Quaternion.identity);
+                other = Instantiate(otherPlayerPrefab, player1LobbyPos.position, Quaternion.identity);
                 isOtherCreate = true;
                 StartCoroutine(Creating());
             }
 
-            
-            
         }
         else
         {
@@ -137,20 +142,6 @@ public class GameManager : MonoBehaviour
                 $"{player.transform.eulerAngles.x};{player.transform.eulerAngles.y};{player.transform.eulerAngles.z}");
         }
 
-        if (client.isCreate)
-        {
-            client.isCreate = false;
-            other = Instantiate(otherPlayerPrefab, player2CreatePos.position, Quaternion.identity);
-            StartCoroutine(Creating());
-        }
-
-        if (client.isDelete)
-        {
-            client.isDelete = false;
-            isOtherCreate = false;
-            Destroy(other); 
-        }
-
         if (isOtherCreate && frame)
         {
             other.transform.position = client.pos;
@@ -162,25 +153,47 @@ public class GameManager : MonoBehaviour
         {
             client.CloseSocket();
         }
-        
+
         if (Input.GetKey("f5"))
         {
             Respawn();
         }
-        
+
 
         if (!client.socketReady)
         {
             SceneManager.LoadScene("Create");
         }
-    }   
+    }
+
+    public void CreateOther()
+    {
+        other = Instantiate(otherPlayerPrefab, player2LobbyPos.position, Quaternion.identity);
+        StartCoroutine(Creating());
+    }
+
+    public void DeleteOther()
+    {
+        Destroy(other);
+    }
+
 
     public void Respawn()
     {
-        player.transform.position = player1CreatePos.position;
-        player.transform.rotation = Quaternion.identity;
-        player.GetComponent<Rigidbody>().velocity = Vector3.zero;
-        player.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        if (client.clientName.Equals("0"))
+        {
+            player.transform.position = player1CreatePos.position;
+            player.transform.rotation = Quaternion.identity;
+            player.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            player.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        }
+        else
+        {
+            player.transform.position = player2CreatePos.position;
+            player.transform.rotation = Quaternion.identity;
+            player.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            player.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        }
     }
 
     IEnumerator Creating()
@@ -204,15 +217,39 @@ public class GameManager : MonoBehaviour
         other.GetComponent<BoxCollider>().enabled = true;
     }
 
+    public void GameStart()
+    {
+        Debug.Log("게임시작");//게임 시작
+        StartCoroutine(CountDown());
+    }
+
+    IEnumerator CountDown()
+    {
+        countDownTxt.enabled = true ;
+        for (int i = 3; i >= 0; i--)
+        {
+            countDownTxt.text = i.ToString();
+            Debug.Log(countDownTxt.text);
+            yield return new WaitForSeconds(1f);
+        }
+        countDownTxt.text = null;
+
+        client.Send("%Start");
+    }
+
     public void CreateFallingFloor(int[,] floors)
     {
         int cnt = 0;
+
+        dicFalse = new Dictionary<int, FalseFloorEvent>();
 
         foreach (int floor in floors)
         {
             if (floor == 0)
             {
-                Instantiate(falseFloor, floorsPos[cnt].position, floorsPos[cnt].rotation);
+                FalseFloorEvent a = Instantiate(falseFloor, floorsPos[cnt].position, floorsPos[cnt].rotation).GetComponent<FalseFloorEvent>();
+                a.floorName = cnt;
+                dicFalse.Add(cnt, a);
             }
 
             if (floor == 1)
@@ -230,7 +267,7 @@ public class GameManager : MonoBehaviour
 
     public void CreateSpineBrigde(List<Vector3> brigdes)
     {
-        for(int i=0; i<3; i++)
+        for(int i=0; i<6; i++)
         {
             brigdesRot[i].eulerAngles = brigdes[i];
         }
@@ -241,5 +278,27 @@ public class GameManager : MonoBehaviour
     public void SpinDir(int id, bool dir)
     {
         brigdes[id].dir = dir;
+    }
+
+    public void Falling(int name)
+    {
+        dicFalse[name].FallingFloor();
+    }
+
+    public void StageEnd(string name, int stage) 
+    {
+        if (name.Equals("0"))
+        {
+            player1Stage[stage-1].StageEnd();
+        }
+        else
+        {
+            player2Stage[stage-1].StageEnd();
+        }
+
+        if (client.clientName.Equals(name))
+        {
+            Respawn();
+        }
     }
 }

@@ -126,6 +126,10 @@ public class Server : MonoBehaviour
             Debug.Log(data);
             c.clientName = data.Split(';')[1];
             Broadcast($"%Create;{c.clientName}", clients);
+            if (clients.Count >= 2)
+            {
+                Broadcast($"%Start", clients);
+            }
             return;
         }
 
@@ -141,13 +145,13 @@ public class Server : MonoBehaviour
 
         if (data.Contains("%Goal"))
         {
-            Broadcast($"%Goal;" + data.Split(';')[1], clients);
+            Broadcast($"%Goal;" + data.Split(';')[1] +";"+ data.Split(';')[2], clients);
             return;
         }
 
         if (data.Contains("%Floor"))
         {
-            Broadcast($"%Floor{obstacle.GetFloor()}", clients); //보내고\
+            Broadcast($"%Floor{obstacle.GetFloor()}", new List<ServerClient>() { clients[clients.Count - 1] }); //보내고\
             return;
         }
 
@@ -159,6 +163,18 @@ public class Server : MonoBehaviour
                 Debug.Log(b);
                 Broadcast($"%Brigde;{b.x};{b.y};{b.z}", clients); //보내고
             }
+            return;
+        }
+
+        if (data.Contains("%Falling"))
+        {
+            Broadcast($"%Falling;{data.Split(';')[1]}",clients);
+            return;
+        }
+
+        if (data.Contains("%Start"))
+        {
+            Broadcast($"%Go", clients);
             return;
         }
 

@@ -18,11 +18,10 @@ public class Client : MonoBehaviour
 	StreamWriter writer;
 	StreamReader reader;
 
-	public bool isCreate;
-	public bool isDelete;
-
 	public Vector3 pos;
 	public Vector3 rot;
+
+	int[,] floors;
 
 	List<Vector3> birgdes = new List<Vector3>();
 
@@ -61,7 +60,7 @@ public class Client : MonoBehaviour
 		if (data.Contains("%NAME"))
 		{
 			clientName = data.Split(';')[1];
-			Debug.Log(data.Split(';')[1]);
+			//Debug.Log(data.Split(';')[1]);
 			Send("%NAME;"+clientName);
 			return;
 		} 
@@ -91,18 +90,23 @@ public class Client : MonoBehaviour
 		
         if (data.Contains("%Create"))
         {
-			//Debug.Log(data.Split(';')[1]);
-			if(clientName != data.Split(';')[1])
+			manager.isCreateDone = true;
+			if (clientName != data.Split(';')[1])
             {
-				isCreate = true;
+				manager.CreateOther();
 			}
+        }
+
+        if (data.Contains("%Start"))
+        {
+			manager.GameStart();
         }
 
 		if (data.Contains("%Disconnect"))
         {
             if (clientName.Equals("0"))
             {
-				isDelete = true;
+				manager.DeleteOther();
             }
         }
 
@@ -113,19 +117,14 @@ public class Client : MonoBehaviour
 				Debug.Log("호스트가 나갔습니다");
 				SceneManager.LoadScene("Create");
 			}
-
 		}
 
-        if (data.Contains("%Goal"))
-        {
-			if (data.Split(';')[1].Equals(clientName))
-			{
-				Debug.Log("win");
-			}
-            else
-            {
-				Debug.Log("lose");
-            }
+		if (data.Contains("%Goal"))
+		{
+			//Debug.Log(data.Split(';')[1] + data.Split(';')[2]);
+
+			manager.StageEnd(data.Split(';')[1], int.Parse(data.Split(';')[2]));
+
 		}
         //Debug.Log(data);
 
@@ -133,7 +132,7 @@ public class Client : MonoBehaviour
         {
 			string[] a = data.Split(';');
 
-			int[,] floors = floors = new int[10, 5] {
+			floors = floors = new int[10, 5] {
 								{0,0,0,0,0 },
 								{0,0,0,0,0 },
 								{0,0,0,0,0 },
@@ -144,13 +143,13 @@ public class Client : MonoBehaviour
 								{0,0,0,0,0 },
 								{0,0,0,0,0 },
 								{0,0,0,0,0 },
-			}; 
+			};
 
 			int cnti = 0; //2차원 배열 만들기 위해 사용
 			int cntj = 0;
-			
-			for(int i=1; i < a.Length; i++)
-            {
+
+			for (int i = 1; i < a.Length; i++)
+			{
 				floors[cnti, cntj] = int.Parse(a[i]);
 
 				cntj++;
@@ -160,16 +159,21 @@ public class Client : MonoBehaviour
 					cnti++;
 					cntj = 0;
 				}
-            }
+			}
 
 			manager.CreateFallingFloor(floors);
+        }
+
+        if (data.Contains("%Falling"))
+        {
+			manager.Falling(int.Parse(data.Split(';')[1]));
         }
 
         if (data.Contains("%Brigde"))
         {
 			string[] a = data.Split(';');
 			birgdes.Add(new Vector3(float.Parse(a[1]), float.Parse(a[2]), float.Parse(a[3])));
-			if (birgdes.Count == 3)
+			if (birgdes.Count == 6)
 			{
 				manager.CreateSpineBrigde(birgdes);
 			}
@@ -181,6 +185,11 @@ public class Client : MonoBehaviour
 			//Debug.Log($"{int.Parse(a[1])}{bool.Parse(a[2])}");
 			manager.SpinDir(int.Parse(a[1]),bool.Parse(a[2]));
 			
+        }
+
+        if (data.Split(';')[0].Equals("%Go"))
+        {
+			manager.Respawn();
         }
 	}
 

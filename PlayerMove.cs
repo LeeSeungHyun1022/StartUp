@@ -92,6 +92,7 @@ public class PlayerMove : MonoBehaviour
 
     void jump()
     {
+        /*
         if (jDown && isJump1 && !isJump2 && !isGround)
         {
             rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
@@ -106,6 +107,12 @@ public class PlayerMove : MonoBehaviour
             rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
             isJump1 = true;
             //점프 애니메이션
+        }
+        */
+        if (jDown)
+        {
+            rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
+            rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
         }
     }
 

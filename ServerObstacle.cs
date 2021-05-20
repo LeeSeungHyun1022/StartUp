@@ -6,11 +6,12 @@ public class ServerObstacle : MonoBehaviour
 {
     public Server server;
 
-    public GameManager manager;
-
     public GameObject brigd1;
     public GameObject brigd2;
     public GameObject brigd3;
+    public GameObject brigd4;
+    public GameObject brigd5;
+    public GameObject brigd6;
 
     int[,] floors;
 
@@ -33,7 +34,7 @@ public class ServerObstacle : MonoBehaviour
             float fran = Random.Range(1f, 4f);
             yield return new WaitForSeconds(fran);
 
-            int iran = Random.Range(0, 3); //1~3까지 브릿지
+            int iran = Random.Range(0, 6); //1~6까지 브릿지
             List<int> a = new List<int>();
             for(int i=0; i < iran; i++)
             {
@@ -41,7 +42,7 @@ public class ServerObstacle : MonoBehaviour
                 {
                     continue;
                 }
-                a.Add(Random.Range(0, 3));
+                a.Add(Random.Range(0, 6));
             }
             int dran = Random.Range(0, 2); //0 왼쪽, 1오른쪽 회전
 
@@ -61,6 +62,9 @@ public class ServerObstacle : MonoBehaviour
         a.Add(brigd1.transform.eulerAngles);
         a.Add(brigd2.transform.eulerAngles);
         a.Add(brigd3.transform.eulerAngles);
+        a.Add(brigd4.transform.eulerAngles);
+        a.Add(brigd5.transform.eulerAngles);
+        a.Add(brigd6.transform.eulerAngles);
 
         //Debug.Log(a);
 
@@ -131,8 +135,6 @@ public class ServerObstacle : MonoBehaviour
         {
             a += $"{floor},";
         }
-        //Debug.Log($"{a}");
-        manager.CreateFallingFloor(floors);
     }
     public string GetFloor()
     {
