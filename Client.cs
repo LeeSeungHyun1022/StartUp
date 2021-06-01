@@ -95,12 +95,14 @@ public class Client : MonoBehaviour
             {
 				manager.CreateOther();
 			}
-        }
+			return;
+		}
 
-        if (data.Contains("%Start"))
+        if (data.Split(';')[0].Equals("%Start"))
         {
 			manager.GameStart();
-        }
+			return;
+		}
 
 		if (data.Contains("%Disconnect"))
         {
@@ -108,7 +110,8 @@ public class Client : MonoBehaviour
             {
 				manager.DeleteOther();
             }
-        }
+			return;
+		}
 
         if (data.Contains("%Close"))
         {
@@ -117,6 +120,7 @@ public class Client : MonoBehaviour
 				Debug.Log("호스트가 나갔습니다");
 				SceneManager.LoadScene("Create");
 			}
+			return;
 		}
 
 		if (data.Contains("%Goal"))
@@ -124,11 +128,11 @@ public class Client : MonoBehaviour
 			//Debug.Log(data.Split(';')[1] + data.Split(';')[2]);
 
 			manager.StageEnd(data.Split(';')[1], int.Parse(data.Split(';')[2]));
-
+			return;
 		}
-        //Debug.Log(data);
+		//Debug.Log(data);
 
-        if (data.Contains("%Floor"))
+		void Floor()
         {
 			string[] a = data.Split(';');
 
@@ -162,12 +166,27 @@ public class Client : MonoBehaviour
 			}
 
 			manager.CreateFallingFloor(floors);
-        }
+			return;
+		}
+
+        if (data.Split(';')[0].Equals("%ReFloor"))
+        {
+			manager.ReStart();
+			Floor();
+			return;
+		}
+
+        if (data.Split(';')[0].Equals("%Floor"))
+        {
+			Floor();
+			return;
+		}
 
         if (data.Contains("%Falling"))
         {
 			manager.Falling(int.Parse(data.Split(';')[1]));
-        }
+			return;
+		}
 
         if (data.Contains("%Brigde"))
         {
@@ -177,6 +196,7 @@ public class Client : MonoBehaviour
 			{
 				manager.CreateSpineBrigde(birgdes);
 			}
+			return;
 		}
 
         if (data.Contains("%Spin"))
@@ -184,12 +204,34 @@ public class Client : MonoBehaviour
 			string[] a = data.Split(';');
 			//Debug.Log($"{int.Parse(a[1])}{bool.Parse(a[2])}");
 			manager.SpinDir(int.Parse(a[1]),bool.Parse(a[2]));
-			
-        }
+			return;
+		}
 
         if (data.Split(';')[0].Equals("%Go"))
-        {
+		{ 
 			manager.Respawn();
+			manager.CountTime();
+			return;
+		}
+
+        if (data.Split(';')[0].Equals("%ReStart"))
+        {
+			manager.ReStart();
+			return;
+		}
+
+        if (data.Split(';')[0].Equals("%Time"))
+        {
+			data.Remove(0);
+			manager.setTime(data.Split(';'));
+			return;
+		}
+
+        if (data.Split(';')[0].Equals("%Clear"))
+        {
+			string[] a = data.Split(';');
+			manager.StageEnd(a[1], int.Parse(a[2]));
+			manager.Clear();
         }
 	}
 

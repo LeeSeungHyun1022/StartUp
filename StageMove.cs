@@ -6,6 +6,8 @@ public class StageMove : MonoBehaviour
 {
     public Transform pos;
 
+    public bool isLast;
+
     BoxCollider trigger;
 
     float limit;
@@ -15,6 +17,11 @@ public class StageMove : MonoBehaviour
         trigger = gameObject.GetComponent<BoxCollider>();
 
         limit = gameObject.transform.position.y + 10f;
+
+        if (isLast)
+        {
+            trigger.isTrigger = false;
+        }
     }
 
     public void StageEnd()
@@ -24,7 +31,7 @@ public class StageMove : MonoBehaviour
 
     IEnumerator StageFloorMove()
     {
-        Debug.Log(gameObject.transform.position.y);
+        //Debug.Log(gameObject.transform.position.y);
         trigger.isTrigger = false;
         for (; ; )
         {
@@ -32,8 +39,8 @@ public class StageMove : MonoBehaviour
             {
                 break;
             }
-            gameObject.transform.position += Vector3.up * Time.deltaTime;
-            Debug.Log(gameObject.transform.position.y);
+            gameObject.transform.position += Vector3.up * 3 * Time.deltaTime;
+            //Debug.Log(gameObject.transform.position.y);
             yield return new WaitForSeconds(0.02f);
         }
     }

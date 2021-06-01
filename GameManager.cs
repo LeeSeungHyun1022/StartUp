@@ -5,7 +5,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
-{ 
+{
+    public ClearTime time;
+
     public GameObject playerPrefab;
     public GameObject otherPlayerPrefab;
 
@@ -20,11 +22,14 @@ public class GameManager : MonoBehaviour
     public StageMove[] player1Stage;
     public StageMove[] player2Stage;
 
+    public GameObject[] stages;
+    List<Vector3> initStages = new List<Vector3>();
+
     public GameObject trueFloor;
     public GameObject falseFloor;
     public Transform[] floorsPos;
 
-
+        
     public Transform[] brigdesRot;
     public SpinBrigde[] brigdes;
 
@@ -35,11 +40,17 @@ public class GameManager : MonoBehaviour
 
     public Text countDownTxt;
 
+    public TextMesh[] bestClearTime;
+
+    public GameObject reset;
+    public ParticleSystem[] particles;
+
     bool isConnect;
     bool isOtherCreate;
     public bool isCreateDone;
 
     Dictionary<int, FalseFloorEvent> dicFalse;
+    List<GameObject> randFloors;
 
     // Start is called before the first frame update
     void Start()
@@ -52,8 +63,14 @@ public class GameManager : MonoBehaviour
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 60;
 
+        foreach (ParticleSystem particle in particles)
+        {
+            particle.Stop();
+        }
+
         if (TCP.isHost)
         {
+            server.enabled = true;
             server.ServerCreate();
             obstacle.ServerStart();
         }
@@ -61,6 +78,31 @@ public class GameManager : MonoBehaviour
         StartCoroutine(CreateMap());
     }
 
+    public void ReStart()
+    {
+        foreach (ParticleSystem particle in particles)
+        {
+            particle.Stop();
+        }
+
+        time.Reset();
+
+        foreach (GameObject randfloor in randFloors)
+        {
+            Destroy(randfloor);
+        }
+
+        player.transform.position = player1LobbyPos.position;
+
+        int cnt = 0 ;
+
+        foreach(GameObject stage in stages)
+        {
+            stage.transform.position = initStages[cnt++];
+        }
+
+        GameStart();
+    }
 
     IEnumerator CreateMap()
     {
@@ -94,6 +136,7 @@ public class GameManager : MonoBehaviour
             }
             yield return new WaitForSeconds(0.1f);
         }
+        client.Send("%GetTime");
         StartCoroutine(Connect());
     }
 
@@ -121,11 +164,15 @@ public class GameManager : MonoBehaviour
                 isOtherCreate = true;
                 StartCoroutine(Creating());
             }
-
         }
         else
         {
             Debug.Log("에러 연결 안됨");
+        }
+
+        foreach (GameObject stage in stages)
+        {
+            initStages.Add(stage.transform.position);
         }
     }
     //host 0 다음부터 +1
@@ -154,9 +201,14 @@ public class GameManager : MonoBehaviour
             client.CloseSocket();
         }
 
-        if (Input.GetKey("f5"))
+        if (Input.GetKeyDown("f5"))
         {
             Respawn();
+        }
+
+        if (Input.GetKeyDown("f6"))
+        {
+            player.GetComponent<Rigidbody>().useGravity = !player.GetComponent<Rigidbody>().useGravity;
         }
 
 
@@ -209,6 +261,7 @@ public class GameManager : MonoBehaviour
         }
         isCreateDone = true;
         StartCoroutine(Spawn());
+
     }
 
     IEnumerator Spawn()
@@ -221,6 +274,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("게임시작");//게임 시작
         StartCoroutine(CountDown());
+
     }
 
     IEnumerator CountDown()
@@ -229,7 +283,7 @@ public class GameManager : MonoBehaviour
         for (int i = 3; i >= 0; i--)
         {
             countDownTxt.text = i.ToString();
-            Debug.Log(countDownTxt.text);
+            //Debug.Log(countDownTxt.text);
             yield return new WaitForSeconds(1f);
         }
         countDownTxt.text = null;
@@ -242,19 +296,23 @@ public class GameManager : MonoBehaviour
         int cnt = 0;
 
         dicFalse = new Dictionary<int, FalseFloorEvent>();
+        randFloors = new List<GameObject>();
 
         foreach (int floor in floors)
         {
             if (floor == 0)
             {
-                FalseFloorEvent a = Instantiate(falseFloor, floorsPos[cnt].position, floorsPos[cnt].rotation).GetComponent<FalseFloorEvent>();
+                GameObject o = Instantiate(falseFloor, floorsPos[cnt].position, floorsPos[cnt].rotation);
+                randFloors.Add(o);
+                FalseFloorEvent a = o.GetComponent<FalseFloorEvent>();
                 a.floorName = cnt;
                 dicFalse.Add(cnt, a);
             }
 
             if (floor == 1)
             {
-                Instantiate(trueFloor, floorsPos[cnt].position, floorsPos[cnt].rotation);
+                GameObject o = Instantiate(trueFloor, floorsPos[cnt].position, floorsPos[cnt].rotation);
+                randFloors.Add(o);
             }
 
             cnt++;
@@ -289,10 +347,16 @@ public class GameManager : MonoBehaviour
     {
         if (name.Equals("0"))
         {
+            time.Player1(stage - 1);
+            if (stage == 6)
+                return;
             player1Stage[stage-1].StageEnd();
         }
         else
         {
+            time.Player2(stage - 1);
+            if (stage == 6)
+                return;
             player2Stage[stage-1].StageEnd();
         }
 
@@ -300,5 +364,38 @@ public class GameManager : MonoBehaviour
         {
             Respawn();
         }
+    }
+    public void CountTime()
+    {
+        time.StageStart();
+    }
+    public void setTime(string[] time)
+    {
+       for(int i=0; i<6; i++)
+        {
+            bestClearTime[i].text = time[i+1];
+        }
+    }
+
+    public void Clear()
+    {
+        reset.active = true;
+        foreach (ParticleSystem particle in particles)
+        {
+            particle.Play();
+        }
+
+        if (TCP.isHost)
+        {
+            string alltime = time.UpdateTime();
+            StartCoroutine(DBUpdate(alltime));
+            Debug.Log("11");
+        }
+    }
+
+    IEnumerator DBUpdate(string alltime)
+    {
+        yield return new WaitForSeconds(1f);
+        client.Send("%Update" + alltime);
     }
 }

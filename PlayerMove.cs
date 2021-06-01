@@ -63,7 +63,7 @@ public class PlayerMove : MonoBehaviour
 
     void Move()
     {
-        if (!isJump1 && isGround)
+        if (!isJump1 /*&& isGround*/)
         {
             //Vector3 moveH = transform.right * hAxis;
             Vector3 moveV = transform.forward * vAxis;
@@ -92,9 +92,10 @@ public class PlayerMove : MonoBehaviour
 
     void jump()
     {
-        /*
-        if (jDown && isJump1 && !isJump2 && !isGround)
+
+        if (jDown && !isJump2 && !isGround)
         {
+            rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
             rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
             isJump2 = true;
             //다이빙 애니메이션
@@ -108,12 +109,7 @@ public class PlayerMove : MonoBehaviour
             isJump1 = true;
             //점프 애니메이션
         }
-        */
-        if (jDown)
-        {
-            rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
-            rigid.AddForce(transform.forward * jumpFoward, ForceMode.Impulse);
-        }
+
     }
 
     private void OnCollisionEnter(Collision collision)

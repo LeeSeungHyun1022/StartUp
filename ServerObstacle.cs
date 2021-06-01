@@ -15,6 +15,10 @@ public class ServerObstacle : MonoBehaviour
 
     int[,] floors;
 
+    bool[] p1Clear = { true, true, true, true, true };
+    bool[] p2Clear = { false, false, false, false, false };
+
+    bool isDone;
 
     public void ServerStart()
     {
@@ -69,6 +73,17 @@ public class ServerObstacle : MonoBehaviour
         //Debug.Log(a);
 
         return a;
+    }
+
+    public string ReRand()
+    {
+        isDone = false;
+        StartFallingFloor();
+        for (; ; )
+        {
+            if(isDone == true) 
+                return GetFloor();
+        }
     }
 
     private void StartFallingFloor()
@@ -130,11 +145,7 @@ public class ServerObstacle : MonoBehaviour
                 floors[x, y] = 1;
             }*/
         }
-        string a = "";
-        foreach (int floor in floors)
-        {
-            a += $"{floor},";
-        }
+        isDone = true;
     }
     public string GetFloor()
     {
@@ -146,5 +157,47 @@ public class ServerObstacle : MonoBehaviour
         }
 
         return a;
+    }
+
+    public void ClearStage(string clientName, string name)
+    {
+        if (clientName.Equals("0"))
+        {
+            p1Clear[int.Parse(name)-1] = true;
+        }
+        else
+        {
+            p2Clear[int.Parse(name)-1] = true;
+        }
+    }
+
+    public bool AllClear(string clientName)
+    {
+        if (clientName.Equals("0"))
+        {
+            foreach(bool a in p1Clear)
+            {
+                if (a != true)
+                    return false;
+            }
+        }
+        else
+        {
+            foreach (bool a in p2Clear)
+            {
+                if (a != true)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public void ClearReset()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            p1Clear[i] = false;
+            p2Clear[i] = false;
+        }
     }
 }

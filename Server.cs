@@ -13,6 +13,7 @@ public class Server : MonoBehaviour
     List<ServerClient> disconnectList;
 
     public ServerObstacle obstacle;
+    public TextDB txt;
 
     TcpListener server;
     bool serverStarted;
@@ -121,7 +122,7 @@ public class Server : MonoBehaviour
 
     void OnIncomingData(ServerClient c, string data)
     {
-        if (data.Contains("%NAME"))
+        if (data.Split(';').Equals("%NAME"))
         {
             Debug.Log(data);
             c.clientName = data.Split(';')[1];
@@ -145,13 +146,29 @@ public class Server : MonoBehaviour
 
         if (data.Contains("%Goal"))
         {
-            Broadcast($"%Goal;" + data.Split(';')[1] +";"+ data.Split(';')[2], clients);
+            string[] a = data.Split(';');
+            if (a[2].Equals("6"))
+            {
+                if (obstacle.AllClear(a[1]))
+                {
+                    Broadcast($"%Clear;" + a[1] + ";" + a[2], clients);
+                }
+                return;
+            }
+            obstacle.ClearStage(a[1], a[2]);
+            Broadcast($"%Goal;" + a[1] +";"+ a[2], clients);
             return;
         }
 
-        if (data.Contains("%Floor"))
+        if (data.Split(';')[0].Equals("%Floor"))
         {
             Broadcast($"%Floor{obstacle.GetFloor()}", new List<ServerClient>() { clients[clients.Count - 1] }); //보내고\
+            return;
+        }
+
+        if (data.Contains("%ReFloor"))
+        {
+            Broadcast($"%ReFloor{obstacle.ReRand()}", clients);
             return;
         }
 
@@ -160,7 +177,7 @@ public class Server : MonoBehaviour
             List<Vector3> a = obstacle.GetBrigdeRot();
             foreach (Vector3 b in a)
             {
-                Debug.Log(b);
+                //Debug.Log(b);
                 Broadcast($"%Brigde;{b.x};{b.y};{b.z}", clients); //보내고
             }
             return;
@@ -175,6 +192,29 @@ public class Server : MonoBehaviour
         if (data.Contains("%Start"))
         {
             Broadcast($"%Go", clients);
+            return;
+        }
+
+        if (data.Split(';')[0].Equals("%ReStart"))
+        {
+            Broadcast($"%ReStart", clients);
+            return;
+        }
+
+        if (data.Split(';')[0].Equals("%GetTime"))
+        {
+            string[] a = txt.getTime().Split(';');
+            Broadcast($"%Time;{a[0]};{a[1]};{a[2]};{a[3]};{a[4]};{a[5]}", clients);
+            return;
+        }
+
+        if (data.Split(';')[0].Equals("%Update"))
+        {
+            string[] a = new string[12];
+
+            Array.Copy(data.Split(';'), 1, a, 0, data.Split(';').Length-1);
+
+            txt.DBUpdate(a);
             return;
         }
 
