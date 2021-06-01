@@ -122,7 +122,7 @@ public class Server : MonoBehaviour
 
     void OnIncomingData(ServerClient c, string data)
     {
-        if (data.Split(';').Equals("%NAME"))
+        if (data.Split(';')[0].Equals("%NAME"))
         {
             Debug.Log(data);
             c.clientName = data.Split(';')[1];
